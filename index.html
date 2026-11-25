@@ -1,0 +1,291 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartSpend – AI Household Financial Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">₹</div>
+        <div>
+          <h1>SmartSpend</h1>
+          <p>Household Finance</p>
+        </div>
+      </div>
+      <nav class="nav" id="mainNav">
+        <button class="nav-link active" data-section="dashboard"><span class="nav-icon">📊</span><span>Dashboard</span></button>
+        <button class="nav-link" data-section="expenses"><span class="nav-icon">💳</span><span>My Expenses</span></button>
+        <button class="nav-link" data-section="budget"><span class="nav-icon">🎯</span><span>Budget Planner</span></button>
+        <button class="nav-link" data-section="advisor"><span class="nav-icon">🤖</span><span>AI Financial Advisor</span></button>
+        <button class="nav-link" data-section="savings"><span class="nav-icon">🏦</span><span>Savings Goals</span></button>
+        <button class="nav-link" data-section="reports"><span class="nav-icon">📈</span><span>Reports & Analytics</span></button>
+        <button class="nav-link" data-section="settings"><span class="nav-icon">⚙️</span><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="month-picker-wrap">
+          <label for="globalMonth">Tracking Month</label>
+          <input type="month" id="globalMonth" class="input">
+        </div>
+        <button class="btn btn-ghost full-width" id="themeToggle">Toggle Theme</button>
+      </div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <button class="icon-btn mobile-menu-btn" id="menuToggle" aria-label="Open menu">☰</button>
+        <div>
+          <h2 id="pageTitle">Dashboard</h2>
+          <p id="pageSubtitle">Your household financial overview</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="income-chip">
+            <span>Monthly Income</span>
+            <strong id="topIncome">₹0</strong>
+          </div>
+          <button class="btn btn-primary" id="quickAddExpenseBtn">+ Add Expense</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="page-section active" id="section-dashboard">
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-icon">💰</div><div><p>Monthly Income</p><h3 id="statIncome">₹0</h3></div></article>
+            <article class="stat-card"><div class="stat-icon">📋</div><div><p>Total Allocated Budget</p><h3 id="statAllocated">₹0</h3></div></article>
+            <article class="stat-card"><div class="stat-icon">🧾</div><div><p>Total Expenses</p><h3 id="statExpenses">₹0</h3></div></article>
+            <article class="stat-card"><div class="stat-icon">💵</div><div><p>Remaining Balance</p><h3 id="statBalance">₹0</h3></div></article>
+            <article class="stat-card"><div class="stat-icon">🏦</div><div><p>Total Savings</p><h3 id="statSavings">₹0</h3></div></article>
+            <article class="stat-card"><div class="stat-icon">📉</div><div><p>Savings Percentage</p><h3 id="statSavingsPct">0%</h3></div></article>
+          </div>
+
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-head"><h3>Monthly Income vs Expense</h3><span class="muted">Last 6 months</span></div>
+              <div class="chart-wrap"><canvas id="incomeExpenseChart"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Category-wise Expense</h3><span class="muted">Selected month</span></div>
+              <div class="chart-wrap"><canvas id="categoryPieChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-head"><h3>Budget Utilization</h3><span class="muted">Allocated vs spent</span></div>
+              <div class="chart-wrap"><canvas id="budgetUtilChart"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Monthly Spending Trends</h3><span class="muted">Last 6 months</span></div>
+              <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Budget Alerts</h3><span class="muted">75%, 90%, 100% thresholds</span></div>
+            <div id="dashboardAlerts" class="alerts-list"></div>
+          </div>
+        </section>
+
+        <section class="page-section" id="section-expenses">
+          <div class="grid-2 align-start">
+            <div class="panel">
+              <div class="panel-head"><h3 id="expenseFormTitle">Add Expense</h3><span class="muted">Track household spending</span></div>
+              <form id="expenseForm" class="form-grid">
+                <input type="hidden" id="expenseId">
+                <label>Expense Name<input class="input" id="expenseName" required maxlength="60"></label>
+                <label>Amount (INR)<input class="input" id="expenseAmount" type="number" min="1" step="0.01" required></label>
+                <label>Category<select class="input" id="expenseCategory" required></select></label>
+                <label>Date<input class="input" id="expenseDate" type="date" required></label>
+                <label>Payment Method
+                  <select class="input" id="expensePayment" required>
+                    <option value="">Select method</option>
+                    <option>Cash</option><option>UPI</option><option>Debit Card</option><option>Credit Card</option><option>Net Banking</option><option>Bank Transfer</option>
+                  </select>
+                </label>
+                <label class="full">Description<textarea class="input" id="expenseDescription" rows="3" maxlength="200" placeholder="Optional notes"></textarea></label>
+                <div class="form-actions full">
+                  <button type="submit" class="btn btn-primary" id="expenseSubmitBtn">Add Expense</button>
+                  <button type="button" class="btn btn-ghost" id="expenseCancelBtn" hidden>Cancel</button>
+                </div>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Category Manager</h3><span class="muted">Add, edit, delete custom categories</span></div>
+              <form id="categoryForm" class="form-grid compact">
+                <input type="hidden" id="categoryId">
+                <label>Category Name<input class="input" id="categoryName" required maxlength="40"></label>
+                <label>Icon<input class="input" id="categoryIcon" maxlength="4" placeholder="e.g. 🏠"></label>
+                <div class="form-actions full">
+                  <button type="submit" class="btn btn-primary" id="categorySubmitBtn">Add Category</button>
+                  <button type="button" class="btn btn-ghost" id="categoryCancelBtn" hidden>Cancel</button>
+                </div>
+              </form>
+              <div id="categoryList" class="category-list"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Transaction History</h3><span class="muted" id="expenseCount">0 transactions</span></div>
+            <div class="filters">
+              <input class="input" id="expenseSearch" placeholder="Search expenses...">
+              <select class="input" id="expenseFilterCategory"><option value="all">All Categories</option></select>
+              <input class="input" id="expenseFilterFrom" type="date">
+              <input class="input" id="expenseFilterTo" type="date">
+              <button class="btn btn-ghost" id="clearExpenseFilters">Clear</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Date</th><th>Expense</th><th>Category</th><th>Payment</th><th>Amount</th><th>Actions</th></tr></thead>
+                <tbody id="expenseTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="page-section" id="section-budget">
+          <div class="panel">
+            <div class="panel-head"><h3>Budget Allocation</h3><span class="muted">Assign monthly budgets per category</span></div>
+            <div class="budget-summary" id="budgetSummary"></div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Category</th><th>Budget (INR)</th><th>Spent</th><th>Remaining</th><th>Utilization</th><th>Status</th></tr></thead>
+                <tbody id="budgetTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Budget vs Actual</h3><span class="muted">Comparison for selected month</span></div>
+            <div class="chart-wrap tall"><canvas id="budgetCompareChart"></canvas></div>
+          </div>
+        </section>
+        <section class="page-section" id="section-advisor">
+          <div class="panel advisor-hero">
+            <div>
+              <h3>Smart Financial Feedback</h3>
+              <p>Rule-based insights from your actual transactions, budgets, and month-over-month trends. Designed to be modular for future AI API integration.</p>
+            </div>
+            <button class="btn btn-primary" id="refreshAdvisorBtn">Refresh Insights</button>
+          </div>
+          <div class="stats-grid compact-stats">
+            <article class="stat-card"><div><p>Overspending Categories</p><h3 id="advisorOverspendCount">0</h3></div></article>
+            <article class="stat-card"><div><p>Potential Savings</p><h3 id="advisorPotentialSavings">₹0</h3></div></article>
+            <article class="stat-card"><div><p>Frequent Small Expenses</p><h3 id="advisorSmallCount">0</h3></div></article>
+            <article class="stat-card"><div><p>Month Trend</p><h3 id="advisorTrend">Stable</h3></div></article>
+          </div>
+          <div id="advisorInsights" class="insights-grid"></div>
+        </section>
+
+        <section class="page-section" id="section-savings">
+          <div class="grid-2 align-start">
+            <div class="panel">
+              <div class="panel-head"><h3 id="goalFormTitle">Create Savings Goal</h3><span class="muted">Track progress toward targets</span></div>
+              <form id="goalForm" class="form-grid">
+                <input type="hidden" id="goalId">
+                <label>Goal Name<input class="input" id="goalName" required maxlength="50"></label>
+                <label>Target Amount (INR)<input class="input" id="goalTarget" type="number" min="1" step="0.01" required></label>
+                <label>Saved Amount (INR)<input class="input" id="goalSaved" type="number" min="0" step="0.01" required></label>
+                <label>Target Date<input class="input" id="goalDate" type="date" required></label>
+                <div class="form-actions full">
+                  <button type="submit" class="btn btn-primary" id="goalSubmitBtn">Add Goal</button>
+                  <button type="button" class="btn btn-ghost" id="goalCancelBtn" hidden>Cancel</button>
+                </div>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>What-If Savings Calculator</h3><span class="muted">Simulate expense reduction</span></div>
+              <div class="form-grid">
+                <label>Category<select class="input" id="whatIfCategory"></select></label>
+                <label>Reduction
+                  <select class="input" id="whatIfPercent">
+                    <option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option><option value="20">20%</option>
+                  </select>
+                </label>
+              </div>
+              <div class="whatif-result" id="whatIfResult"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Savings Goals</h3><span class="muted">Monitor target progress</span></div>
+            <div id="goalsList" class="goals-grid"></div>
+          </div>
+        </section>
+
+        <section class="page-section" id="section-reports">
+          <div class="panel">
+            <div class="panel-head"><h3>Financial Reports</h3><span class="muted">Daily, weekly, monthly, annual, and category-wise</span></div>
+            <div class="filters">
+              <select class="input" id="reportType">
+                <option value="daily">Daily Summary</option>
+                <option value="weekly">Weekly Summary</option>
+                <option value="monthly" selected>Monthly Summary</option>
+                <option value="annual">Annual Report</option>
+                <option value="category">Category-wise Report</option>
+              </select>
+              <input class="input" id="reportDate" type="date">
+              <input class="input" id="reportMonth" type="month">
+              <input class="input" id="reportYear" type="number" min="2000" max="2100" step="1">
+              <button class="btn btn-primary" id="exportCsvBtn">Export CSV</button>
+            </div>
+            <div class="report-cards" id="reportCards"></div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="reportTableHead"></thead>
+                <tbody id="reportTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="page-section" id="section-settings">
+          <div class="grid-2 align-start">
+            <div class="panel">
+              <div class="panel-head"><h3>Profile & Preferences</h3><span class="muted">Customize your tracker</span></div>
+              <form id="settingsForm" class="form-grid">
+                <label>Monthly Income (INR)<input class="input" id="settingIncome" type="number" min="0" step="0.01" required></label>
+                <label>Currency<input class="input" value="Indian Rupee (INR)" disabled></label>
+                <label>Theme
+                  <select class="input" id="settingTheme">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                  </select>
+                </label>
+                <label class="full">Household Name<input class="input" id="settingHousehold" maxlength="60" placeholder="e.g. Sharma Family"></label>
+                <div class="form-actions full">
+                  <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Data Management</h3><span class="muted">LocalStorage persistence</span></div>
+              <p class="muted">All data is stored in your browser. You can load realistic sample data or clear everything and start fresh.</p>
+              <div class="settings-actions">
+                <button class="btn btn-primary" id="loadSampleBtn">Load Sample Data</button>
+                <button class="btn btn-danger" id="clearDataBtn">Clear All Data</button>
+              </div>
+              <div class="note-box">
+                <strong>Optional AI API</strong>
+                <p>The advisor uses modular rule-based JavaScript now. A secure backend can plug in an AI API later without changing the UI.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+  <script src="js/storage.js"></script>
+  <script src="js/budget.js"></script>
+  <script src="js/expenses.js"></script>
+  <script src="js/advisor.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
